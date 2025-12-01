@@ -1,7 +1,10 @@
 import { runSolution } from '../utils.ts';
 
-export async function checkSafetiness(data: number[]) {
-  console.log(data);
+export function checkSafetiness(data: number[]): boolean {
+
+  if (data.length < 2) return true;
+  if (data[0] === data[1]) return false;
+
   if(data[0] < data[1]) {
       for(let i = 0; i < data.length; i++) {
         const dif = data[i+1] - data[i];

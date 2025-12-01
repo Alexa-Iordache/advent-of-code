@@ -2,28 +2,25 @@ import { runSolution } from '../utils.ts';
 
 /** provide your solution as the return of this function */
 export async function day1b(data: string[]) {
-  console.log(data);
+  let position = 50;
+  let totalCount = 0;
 
-  const leftArray =[];
+  for (const line of data) {
+    const direction = line[0];
+    const dist = Number(line.slice(1));
 
-  const occurance = new Proxy({}, {
-    get: (target, name) => name in target ? target[name] : 0
-  })
+    for (let i = 0; i < dist; i++) {
+      if (direction === "R") {
+        position = (position + 1) % 100;
+      } else {
+        position = (position - 1 + 100) % 100;
+      }
 
+      if (position === 0) totalCount++;
+    }
+  }
 
-  data.forEach((item) => {
-    const [first, second] = item.split('   ').map(Number);
-    leftArray.push(first);
-
-    occurance[second] ++;
-  })
-
-  return leftArray.reduce((result, currentValue, currentIndex) => {
-
-    result += occurance[currentValue] * currentValue;
-
-    return result;
-  }, 0);
+  return totalCount;
 }
 
 await runSolution(day1b);

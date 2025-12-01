@@ -3,24 +3,26 @@ import { runSolution } from '../utils.ts';
 /** provide your solution as the return of this function */
 export async function day1a(data: string[]) {
   console.log(data);
+  let initialPosition = 50;
+  let totalCount = 0;
 
-  const leftArray =[];
-  const rightArray =[];
+  for (const line of data) {
+    const direction = line[0];
+    const dist = Number(line.slice(1));
 
-  data.forEach((item) => {
-    const [first, second] = item.split('   ').map(Number);
-    leftArray.push(first);
-    rightArray.push(second);
-  })
+    if (direction === 'R') {
+      initialPosition = (initialPosition + dist) % 100;
+      console.log(initialPosition)
+    } else {
+      initialPosition = (initialPosition - dist) % 100;
+      if (initialPosition < 0) initialPosition += 100;
+      console.log(initialPosition)
+    }
 
-  leftArray.sort();
-  rightArray.sort();
+    if (initialPosition === 0) totalCount++;
+  }
 
-  return leftArray.reduce((result, currentValue, currentIndex) => {
-    result += Math.abs(leftArray[currentIndex] - rightArray[currentIndex]);
-
-    return result;
-  }, 0);
+  return totalCount;
 }
 
 await runSolution(day1a);
