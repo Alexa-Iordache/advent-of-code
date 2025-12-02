@@ -1,47 +1,46 @@
 import { runSolution } from '../utils.ts';
 
-export function checkSafetiness(data: number[]): boolean {
+function checkInvalidNumber(nb: number): boolean {
+  const copyNb: string = nb.toString();
+  const length: number = copyNb.length;
 
-  if (data.length < 2) return true;
-  if (data[0] === data[1]) return false;
+  for (let i = 1; i <= length / 2; i++) {
 
-  if(data[0] < data[1]) {
-      for(let i = 0; i < data.length; i++) {
-        const dif = data[i+1] - data[i];
-        if(dif < 1 || dif > 3) {
-          return false;
-        }
-      }
-      return true;
-    } else {
-      for (let i = 0; i < data.length; i++) {
-        const dif = data[i] - data[i + 1];
-        if (dif < 1 || dif > 3) {
-          return false;
-        }
-      }
-      return true;
+    if (length % i !== 0) continue;
+
+    const testingPart: string = copyNb.slice(0, i);
+    let recreatedNb: string = "";
+
+    for (let j = 0; j < length / i; j++) {
+      recreatedNb += testingPart;
     }
+
+    if (recreatedNb === copyNb) return true;
+  }
+
+  return false;
 }
 
 /** provide your solution as the return of this function */
 export async function day2b(data: string[]) {
-  console.log(data);
   let result = 0;
 
-  data.forEach((item) => {
-    const localArray = item.split(' ').map(Number);
+  data.forEach(range => {
+    const localRange = range.split(',');
+    let [startPoint, endPoint]: [number, number] = [0,0];
 
-    for (let i = 0; i < localArray.length; i++) {
-      const copyArray = [...localArray];
-      copyArray.splice(i, 1);
-
-      if(checkSafetiness(copyArray)) {
-        console.log(checkSafetiness(copyArray));
-        result ++;
-        return;
+    localRange.forEach(item => {
+      [startPoint, endPoint] = item.split('-').map(Number);
+      if(startPoint && endPoint) {
+        // console.log([startPoint, endPoint])
+        for(let i = startPoint; i <= endPoint; i++) {
+          if(checkInvalidNumber(i)) {
+            console.log(i);
+            result += i;
+          }
+        }
       }
-    }
+    })
   })
 
   return result;

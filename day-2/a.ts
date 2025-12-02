@@ -1,30 +1,36 @@
 import { runSolution } from '../utils.ts';
 
+function checkInvalidNumber(nb: number): boolean {
+  const copyNb = nb.toString();
+
+  if (copyNb.length % 2 === 0) {
+    const half: number = copyNb.length / 2;
+    if (copyNb.slice(0, half) === copyNb.slice(half)) return true;
+  }
+
+  return false;
+}
+
 /** provide your solution as the return of this function */
 export async function day2a(data: string[]) {
-  console.log(data);
   let result = 0;
 
-  data.forEach((item) => {
-    const localArray = item.split(' ').map(Number);
+  data.forEach(range => {
+    const localRange = range.split(',');
+    let [startPoint, endPoint]: [number, number] = [0,0];
 
-    if(localArray[0] < localArray[1]) {
-      for(let i = 0; i < localArray.length; i++) {
-        const dif = localArray[i+1] - localArray[i];
-        if(dif < 1 || dif > 3) {
-          return;
+    localRange.forEach(item => {
+      [startPoint, endPoint] = item.split('-').map(Number);
+      if(startPoint && endPoint) {
+        // console.log([startPoint, endPoint])
+        for(let i = startPoint; i <= endPoint; i++) {
+          if(checkInvalidNumber(i)) {
+            console.log(i);
+            result += i;
+          }
         }
       }
-      result ++;
-    } else {
-      for(let i = 0; i < localArray.length; i++) {
-        const dif = localArray[i] - localArray[i+1];
-        if(dif < 1 || dif > 3) {
-          return;
-        }
-      }
-      result ++;
-    }
+    })
   })
 
   return result;
