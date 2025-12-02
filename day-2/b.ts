@@ -23,27 +23,23 @@ function checkInvalidNumber(nb: number): boolean {
 
 /** provide your solution as the return of this function */
 export async function day2b(data: string[]) {
-  let result = 0;
 
-  data.forEach(range => {
-    const localRange = range.split(',');
-    let [startPoint, endPoint]: [number, number] = [0,0];
+ return data.reduce((result, line) => {
+   line.split(',').forEach(range => {
+     const [startPoint, endPoint] = range.split('-').map(Number);
 
-    localRange.forEach(item => {
-      [startPoint, endPoint] = item.split('-').map(Number);
-      if(startPoint && endPoint) {
-        // console.log([startPoint, endPoint])
-        for(let i = startPoint; i <= endPoint; i++) {
-          if(checkInvalidNumber(i)) {
-            console.log(i);
-            result += i;
-          }
-        }
-      }
-    })
-  })
+     if(!startPoint || !endPoint) return;
 
-  return result;
+     for (let i = startPoint; i <= endPoint; i++) {
+       if(checkInvalidNumber(i)) {
+         console.log(i);
+         result += i;
+       }
+     }
+   })
+
+   return result;
+ }, 0);
 }
 
 await runSolution(day2b);
