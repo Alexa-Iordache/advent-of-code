@@ -1,73 +1,56 @@
 import { runSolution } from '../utils.ts';
 
 /** provide your solution as the return of this function */
-export async function day6a(map: string[]) {
-  // console.log(map);
-  let guard:[number, number, number, number] = [0, 0, 0, 0];
-  const positions = new Set();
-  for (let y = 0; y < map.length; y++) {
-    for (let x = 0; x < map[y].length; x++) {
-      if(map[y][x] === '^') {
-       guard = [y, x, -1, 0];
-       positions.add(`${y}, ${x}`);
-      }
+export async function day6a(data: string[]) {
+  // console.log(data);
+
+  // extragem numerele si elinimam spatiile
+  const rows = data.map(row =>
+    row
+      .trim()
+      .split(/\s+/)
+      .map(v => (isNaN(Number(v)) ? v : Number(v)))
+  );
+
+  // inversam matricea
+  const cols= [];
+
+  for (let col = 0; col < rows[0].length; col++) {
+    cols[col] = [];
+    for (let row = 0; row < rows.length; row++) {
+      cols[col][row] = rows[row][col];
     }
   }
 
-  while(true) {
-    // const [initialY, initialX]: [number, number] = [guard[2], guard[3]];
-    // if (map[guard[0]-1]?.[guard[1]] === '#') {
-    //   guard[2] = initialX;
-    //   guard[3] = - initialY;
-    // } else {
-    //   guard[0]--;
-    //   positions.add(`${guard[0]}, ${guard[1]}`);
-    // }
-    if(guard[2] === -1 && guard[3] === 0) {
-      if (map[guard[0]-1]?.[guard[1]] === '#') {
-        guard[2] = 0;
-        guard[3] = 1
-      } else {
-        guard[0]--;
-        positions.add(`${guard[0]}, ${guard[1]}`);
-      }
-    }
+  // console.log(cols)
+  let finalResult = 0;
 
-    if(guard[2] === 1 && guard[3] === 0) {
-      if (map[guard[0]+1]?.[guard[1]] === '#') {
-        guard[2] = 0;
-        guard[3] = -1;
-      } else {
-        guard[0]++;
-        positions.add(`${guard[0]}, ${guard[1]}`);
-      }
-    }
+  for (let i = 0; i < cols.length; i++) {
+    // console.log('ROW: ', cols[i]);
+    // console.log('SEMN: ', cols[i][rowLength - 1]);
+    const column = cols[i];
+    const signIndex = column.length - 1;
+    const sign = column[signIndex];
 
-    if(guard[2] === 0 && guard[3] === 1) {
-      if (map[guard[0]]?.[guard[1]+1] === '#') {
-        guard[2] = 1;
-        guard[3] = 0;
-      } else {
-        guard[1]++;
-        positions.add(`${guard[0]}, ${guard[1]}`);
+    if(sign === '+') {
+      let partialResult = 0;
+      for (let j = 0; j < signIndex; j++) {
+        partialResult += Number(column[j]);
       }
-    }
+      // console.log(partialResult)
+      finalResult += partialResult;
 
-    if(guard[2] === 0 && guard[3] === -1) {
-      if (map[guard[0]]?.[guard[1]-1] === '#') {
-        guard[2] = -1;
-        guard[3] = 0;
-      } else {
-        guard[1]--;
-        positions.add(`${guard[0]}, ${guard[1]}`);
+    } else if(sign === '*') {
+      let partialResult = 1;
+      for (let j = 0; j < signIndex; j++) {
+        partialResult *= Number(column[j]);
       }
-    }
-
-    if(guard[0] < 0 || guard[0] >= map.length || guard[1] < 0 || guard[1] >= map[0].length) {
-      break;
+      // console.log(partialResult)
+      finalResult += partialResult;
     }
   }
-  return positions.size - 1;
+
+ return finalResult;
 }
 
 await runSolution(day6a);
