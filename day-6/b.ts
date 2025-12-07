@@ -2,79 +2,54 @@ import { runSolution } from '../utils.ts';
 
 /** provide your solution as the return of this function */
 export async function day6b(data: string[]) {
-  // console.log(data);
+  const numRows = data.length;
+  const numCols = data[0].length;
 
-  // extragem numerele si elinimam spatiile
-  const rows = data.map(row =>
-    row
-      .trim()
-      .split(/\s+/)
-      .map(v => (isNaN(Number(v)) ? v : Number(v)))
-  );
+  let total = 0;
+  let col = 0;
 
-  // inversam matricea
-  const cols= [];
-
-  for (let col = 0; col < rows[0].length; col++) {
-    cols[col] = [];
-    for (let row = 0; row < rows.length; row++) {
-      cols[col][row] = rows[row][col];
+  while (col < numCols) {
+    // Skip empty columns
+    if (data.every(row => row[col] === ' ')) {
+      col++;
+      continue;
     }
+
+    // Collect all columns for this problem (until next empty column)
+    const problemCols: number[][] = [];
+    let operator = '';
+
+    let currentCol = col;
+    while (currentCol < numCols && data.some(row => row[currentCol] !== ' ')) {
+      const digits: string[] = [];
+      for (let row = 0; row < numRows; row++) {
+        const char = data[row][currentCol];
+        if (char === '*' || char === '+') {
+          operator = char; // last char in the problem
+        } else if (char !== ' ') {
+          digits.push(char);
+        }
+      }
+      problemCols.push(digits.map(Number));
+      currentCol++;
+    }
+
+    // Build numbers from columns
+    const numbers = problemCols.map(colDigits => parseInt(colDigits.join(''), 10));
+
+    // Compute result for this problem
+    let subTotal = operator === '*' ? 1 : 0;
+    if (operator === '+') {
+      subTotal = numbers.reduce((a, b) => a + b, 0);
+    } else if (operator === '*') {
+      subTotal = numbers.reduce((a, b) => a * b, 1);
+    }
+
+    total += subTotal;
+    col = currentCol; // move to next problem
   }
 
-  console.log(cols)
-  let finalResult = 0;
-
-  for (let i = 0; i < cols.length; i++) {
-    const column = cols[i];
-    const signIndex = column.length - 1;
-    const sign = column[signIndex];
-
-    for (let j = 0; j < signIndex; j++) {
-      let currentNb = column[j];
-
-      if(0 <= currentNb && currentNb <= 9)  currentNb = currentNb * 1000;
-      if(10 <= currentNb && currentNb <= 99) currentNb = currentNb * 100;
-      if(100 <= currentNb && currentNb <= 999) currentNb = currentNb * 10;
-
-      column[j] = currentNb;
-    }
-    // console.log(column)
-
-    // build numbers by extracting digits safely
-    let firstNb = 0;
-    let secondNb = 0;
-    let thirdNb = 0;
-    let fourthNb = 0;
-
-    for (let j = 0; j < signIndex; j++) {
-      const currentNb = column[j];
-      firstNb = firstNb * 10 + Math.floor(currentNb % 10);
-      secondNb = secondNb * 10 + Math.floor((currentNb / 10) % 10);
-      thirdNb = thirdNb * 10 + Math.floor((currentNb / 100) % 10);
-      fourthNb = fourthNb * 10 + Math.floor(currentNb / 1000);
-    }
-    console.log('FIRST:   ', firstNb);
-    console.log('SECOND:   ', secondNb);
-    console.log('THIRD:   ', thirdNb);
-    console.log('FOURTH:   ', fourthNb);
-
-    if(sign === '+') {
-      const partialResult = firstNb + secondNb + thirdNb + fourthNb;
-      console.log(partialResult)
-      finalResult += partialResult;
-    } else  if(sign === '*') {
-      if (firstNb === 0) firstNb = 1;
-      if (secondNb === 0) secondNb = 1;
-      if (thirdNb === 0) thirdNb = 1;
-      if (fourthNb === 0) fourthNb = 1;
-      const partialResult = firstNb * secondNb * thirdNb * fourthNb;
-      console.log(partialResult)
-      finalResult += partialResult;
-    }
-  }
-
-  return finalResult;
+  return total;
 }
 
 await runSolution(day6b);
