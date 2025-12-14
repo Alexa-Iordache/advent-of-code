@@ -1,64 +1,86 @@
 import { runSolution } from '../utils.ts';
 
-function checkPointInside (redTiles, col, row): boolean {
-  const temp = [];
-  for (let i = 0; i < redTiles.length; i++) {
-    if (redTiles[i][1] === row) {
-      temp.push(redTiles[i][0])
-    }
-  }
-  temp.sort((a, b) => a - b);
+type Edge = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  vertical: boolean;
+};
 
-  if (col < temp[0]) return false;
+export function day9b(data: string[]): number {
 
-  return true;
-}
-
-/** provide your solution as the return of this function */
-export async function day9b(data: string[]) {
-  const allowedTiles: number[][] = [];
+  const points: [number, number][] = [];
+  const edges: Edge[] = [];
   let result = 0;
 
-  // Parse input
+  // parse input
   data.forEach((row) => {
     const [x, y] = row.split(',').map(Number);
-    allowedTiles.push([x, y]);
+    points.push([x, y]);
   });
 
+  // build polygon edges
+  for (let i = 0; i < points.length; i++) {
+    const [x1, y1] = points[i];
+    const [x2, y2] = points[(i + 1) % points.length];
+    edges.push({
+      x1, y1, x2, y2,
+      vertical: x1 === x2
+    });
+  }
+  // console.log(edges);
 
+  // create a rectangle with wach two pairs of points
+  for (let i = 0; i < points.length; i++) {
+    for (let j = i + 1; j < points.length; j++) {
+      const [x1, y1] = points[i];
+      const [x2, y2] = points[j];
 
-  // Try all pairs of tiles as opposite corners
-  for (let i = 0; i < allowedTiles.length - 1; i++) {
-    const [x1, y1] = allowedTiles[i];
-    for (let j = i + 1; j < allowedTiles.length; j++) {
-      const [x2, y2] = allowedTiles[j];
+      // if it's a row/ column, it makes no sense to calculate the area
+      if (x1 === x2 || y1 === y2) continue;
 
       const minX = Math.min(x1, x2);
       const maxX = Math.max(x1, x2);
       const minY = Math.min(y1, y2);
       const maxY = Math.max(y1, y2);
 
-      const width = maxX - minX + 1;
-      const height = maxY - minY + 1;
-      const area = width * height;
+//       (minX, minY) ───────── (maxX, minY)
+//            │                     │
+//            │                     │
+//       (minX, maxY) ───────── (maxX, maxY)
 
-      let valid = true;
+      // assume the rectagle is valid
+      let isRectangleValid = true;
 
-      // Check all tiles in the rectangle
-      for (let y = minY; y <= maxY; y++) {
-        for (let x = minX; x <= maxX; x++) {
-          if (!checkPointInside(allowedTiles, x, y) || x < minX || x > maxX ||  y < minY || y > maxY) {
-            valid = false;
+      for (const edge of edges) {
+        if (edge.vertical) {
+          const edgeX = edge.x1;
+          const edgeMinY = Math.min(edge.y1, edge.y2);
+          const edgeMaxY = Math.max(edge.y1, edge.y2);
+
+          // check if the edge is inside the rectangle
+          if (minX < edgeX && maxX > edgeX && minY < edgeMaxY && maxY > edgeMinY) {
+            isRectangleValid = false;
+            break;
+          }
+        } else {
+          const edgeY = edge.y1;
+          const edgeMinX = Math.min(edge.x1, edge.x2);
+          const edgeMaxX = Math.max(edge.x1, edge.x2);
+
+          if (minY < edgeY && maxY > edgeY && minX < edgeMaxX && maxX > edgeMinX) {
+            isRectangleValid = false;
             break;
           }
         }
-        if (!valid) break;
       }
 
-      // console.log(area);
-      if (valid && area > result) {
-        result = area;
-        console.log(result);
+      if (!isRectangleValid) continue;
+
+      const currentArea = (maxX - minX + 1) * (maxY - minY + 1);
+      if (currentArea > result) {
+        result = currentArea;
       }
     }
   }
