@@ -1,4 +1,5 @@
 import { runSolution } from '../utils.ts';
+import { init } from "z3-solver";
 
 type Machine = {
   buttons: number[][]
@@ -6,7 +7,6 @@ type Machine = {
 }
 
 function parseMachineLine(line: string): Machine {
-
   // extract voltage counter (what is inside { })
   const counterMatch = line.match(/\{([^}]+)}/);
 
@@ -25,60 +25,75 @@ function parseMachineLine(line: string): Machine {
   return { buttons, voltageCounter };
 }
 
+// A * x = T
+// x[j] - de cate ori a fost apasat butonul j
+// A[i][j] = 1 daca butonul j afecteaza contorul i
+// T[i] - valoarea pentru contorul i
+// T - array-ul de voltages
 
-function minButtonPressesForMachine(buttons, voltageCounter) {
-  const copyVoltageCounter = [...voltageCounter];
+async function minButtonPressesForMachine(buttons, voltageCounter) {
+  const { Context } = await init();
+  const context = Context();
+  const optimize = new context.Optimize();
 
-  // sort buttons from max length to min length
-  buttons.sort((a, b) => b.length - a.length);
+  // create int variable for each button
+  const x = buttons.map((_, j) =>
+    context.Int.const(`x_${j}`)
+  );
 
-  let presses = 0;
-  let changed = true;
+  for (const button of x) {
+    // button.ge(0) - numarul de apasari ale butonului trebuie sa fie >= 0 (x[i] >= 0)
+    optimize.add(button.ge(0)); // adaugam fiecare constragere de acest tip la sistem
+  }
 
-  // loop continues until no button can be pressed anymore
-  while (changed) {
-    changed = false;
+  // sum x[j] = voltageCounter[i]
+  // un rand din A inmultit cu x trebuie sa fie egal cu valoarea corespunzatoare din array-ul de voltages
+  for (let i = 0; i < voltageCounter.length; i++) {
 
-    // try each button
-    for (const button of buttons) {
-      let minValue = Number.MAX_SAFE_INTEGER;
-      // console.log(button);
+    const affectingButtons = []; // terms = {x[j] | butonul j afecteaza counter-ul i}
 
-      for (const idx of button) {
-        // console.log(idx);
-        minValue = Math.min(minValue, copyVoltageCounter[idx]);
+    for (let j = 0; j < buttons.length; j++) {
+      if (buttons[j].includes(i)) {
+        affectingButtons.push(x[j]);
       }
-      // console.log('\n');
+    }
 
-      if (minValue > 0 && minValue < Number.MAX_SAFE_INTEGER) {
-        presses += minValue;
-        changed = true;
-
-        for (const idx of button) {
-          copyVoltageCounter[idx] -= minValue;
-        }
-      }
+    if(affectingButtons.length > 0) {
+      optimize.add(context.Sum(...affectingButtons).eq(voltageCounter[i]));
     }
   }
 
-  for (let i = 0; i < copyVoltageCounter.length; i++) {
-    presses += copyVoltageCounter[i];
+  // totalPresses = x[0] + x[1] + ... x[j]
+  const totalPresses = context.Sum(...x);
+  optimize.minimize(totalPresses); // minimizeaza solutia
+
+  // verifica daca gaseste solutia optima
+  const status = await optimize.check();
+  if (status !== "sat") {
+    return;
   }
 
-  return presses;
+  // se extrage solutia
+  const solution = optimize.model();
+
+  // returneaza totalPresses ca numar
+  return Number(solution.eval(totalPresses).toString());
 }
 
-
-/** provide your solution as the return of this function */
 export async function day10b(data: string[]) {
   let result = 0;
 
-  data.forEach(line => {
+  for (const line of data) {
     const { buttons, voltageCounter } = parseMachineLine(line);
-    result += minButtonPressesForMachine(buttons, voltageCounter);
-  });
+    const presses = await minButtonPressesForMachine(
+      buttons,
+      voltageCounter
+    );
+    result += presses;
+  }
 
   return result;
 }
+
 
 await runSolution(day10b);
