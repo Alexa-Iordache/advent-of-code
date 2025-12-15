@@ -31,9 +31,9 @@ function parseMachineLine(line: string): Machine {
 // T[i] - valoarea pentru contorul i
 // T - array-ul de voltages
 
-async function minButtonPressesForMachine(buttons, voltageCounter) {
-  const { Context } = await init();
-  const context = Context();
+async function minButtonPressesForMachine(buttons, voltageCounter, context) {
+  // const { Context } = await init();
+  // const context = Context();
   const optimize = new context.Optimize();
 
   // create int variable for each button
@@ -81,13 +81,16 @@ async function minButtonPressesForMachine(buttons, voltageCounter) {
 }
 
 export async function day10b(data: string[]) {
+  const { Context } = await init();
+  const context = Context('test');
   let result = 0;
 
   for (const line of data) {
     const { buttons, voltageCounter } = parseMachineLine(line);
     const presses = await minButtonPressesForMachine(
       buttons,
-      voltageCounter
+      voltageCounter,
+      context
     );
     result += presses;
   }
